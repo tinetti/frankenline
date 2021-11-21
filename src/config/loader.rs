@@ -21,15 +21,20 @@ mod tests {
     #[test]
     fn test_load() -> Result<(), Box<dyn Error>> {
         let text = r#"
-            name = 'find and grep'
+            description = 'find and grep'
 
-            [args]
-            github = 'xxxxxxxxxxxxxxxxx'
-            travis = 'yyyyyyyyyyyyyyyyy'
+            [[commands]]
+            name = 'x'
+
+            [[commands]]
+            name = 'y'
         "#;
         let config = load_from_string(text)?;
 
-        assert_eq!(config.name, "find and grep");
+        assert_eq!(config.description, "find and grep");
+        assert_eq!(config.commands.len(), 2);
+        assert_eq!(config.commands[0].name, "x");
+        assert_eq!(config.commands[1].name, "y");
         Ok(())
     }
 }

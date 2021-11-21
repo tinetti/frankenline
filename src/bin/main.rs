@@ -12,6 +12,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     args.drain(0..1);
 
     let command = frankenline::selector::select_command(&config, &args);
-    println!("{}", command.command);
+    println!("{}", command.name);
     Ok(())
 }
