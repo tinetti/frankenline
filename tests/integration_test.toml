@@ -1,0 +1,11 @@
+description = 'find and grep'
+
+[[import]]
+type = 'Postman'
+path = 'Frankenline.postman_collection.json'
+
+[[command]]
+name = 'x'
+
+[[command]]
+name = 'y'

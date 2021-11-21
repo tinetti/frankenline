@@ -1,0 +1,38 @@
+{
+	"info": {
+		"_postman_id": "41e697c5-cadb-437b-b2e9-336c00724c8f",
+		"name": "Frankenline",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "example - get json from api",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3",
+					"protocol": "https",
+					"host": [
+						"dog-facts-api",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"api",
+						"v1",
+						"resources",
+						"dogs"
+					],
+					"query": [
+						{
+							"key": "number",
+							"value": "3"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

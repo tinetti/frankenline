@@ -7,5 +7,5 @@ pub(crate) fn select_command_from_args<'a>(config: &'a Config, args: &Vec<String
 
     println!("args: {:?}", args);
 
-    return Some(&config.commands[0]);
+    return Some(&config.command[0]);
 }

@@ -1,19 +1,50 @@
 use std::error::Error;
+use std::fs;
 use serde::{Deserialize};
+use crate::config::model::{Command, Config};
 
-fn deserialize_postman_model(text: &str) -> Result<Postman, Box<dyn Error>> {
-    let postman = serde_json::from_str(text)?;
-    Ok(postman)
+pub fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
+    let text = fs::read_to_string(path)?;
+    from_string(text.as_str())
+}
+
+fn from_string(text: &str) -> Result<Config, Box<dyn Error>> {
+    let postman: Postman = serde_json::from_str(text)?;
+    let config = Config::from(postman);
+    Ok(config)
 }
 
 #[derive(Deserialize, Debug)]
 struct Postman {
     info: Info,
+    item: Vec<Item>,
 }
 
 #[derive(Deserialize, Debug)]
 struct Info {
     name: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct Item {
+    name: String,
+}
+
+
+
+impl From<Postman> for Config {
+    fn from(postman: Postman) -> Self {
+        let commands = postman.item.into_iter().map(|item| {
+            Command {
+                name: item.name,
+            }
+        }).collect();
+        Config {
+            description: postman.info.name,
+            command: commands,
+            import: None,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -22,7 +53,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_postman_model() -> Result<(), Box<dyn Error>> {
+    fn test_deserialize_postman_from_string() -> Result<(), Box<dyn Error>> {
         let text = r#"
         {
             "info": {
@@ -63,9 +94,9 @@ mod tests {
             ]
         }
         "#;
-        let postman_model = deserialize_postman_model(text)?;
+        let config = from_string(text)?;
 
-        assert_eq!(postman_model.info.name, "Frankenline");
+        assert_eq!(config.description, "Frankenline");
         Ok(())
     }
 }

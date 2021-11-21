@@ -5,7 +5,7 @@ use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Hello, world!");
-    let config = frankenline::config::loader::load_from_file("frankenline.toml")?;
+    let config = frankenline::config::loader::load("frankenline.toml")?;
     let mut args: Vec<String> = env::args().collect();
 
     // trim off the first arg since it's just the frankenline command itself

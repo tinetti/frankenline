@@ -1,40 +1,30 @@
 use std::error::Error;
-use std::fs;
-use std::path::Path;
+use crate::config::model::{Config, Import, ImportType};
+use crate::config::toml::from_file as from_toml_file;
+use crate::config::postman::from_file as from_postman_file;
 
-use super::model::Config;
-
-pub fn load_from_file<P: AsRef<Path>>(path: P) -> Result<Config, Box<dyn Error>> {
-    let text = fs::read_to_string(path)?;
-    load_from_string(text.as_str())
-}
-
-fn load_from_string(text: &str) -> Result<Config, Box<dyn Error>> {
-    let config = toml::from_str(text)?;
+pub fn load(path: &str) -> Result<Config, Box<dyn Error>> {
+    let mut original_config = from_toml_file(path)?;
+    let config = match original_config.import {
+        None => original_config,
+        Some(ref imports) => {
+            let mut commands = vec![];
+            commands.append(&mut original_config.command);
+            for import in imports {
+                let mut child = from_import(import)?;
+                commands.append(&mut child.command);
+            }
+            Config {
+                command: commands,
+                ..original_config
+            }
+        }
+    };
     Ok(config)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_load() -> Result<(), Box<dyn Error>> {
-        let text = r#"
-            description = 'find and grep'
-
-            [[commands]]
-            name = 'x'
-
-            [[commands]]
-            name = 'y'
-        "#;
-        let config = load_from_string(text)?;
-
-        assert_eq!(config.description, "find and grep");
-        assert_eq!(config.commands.len(), 2);
-        assert_eq!(config.commands[0].name, "x");
-        assert_eq!(config.commands[1].name, "y");
-        Ok(())
+fn from_import(import: &Import) -> Result<Config, Box<dyn Error>> {
+    match import.import_type {
+        ImportType::Postman => from_postman_file(import.path.as_str())
     }
 }
