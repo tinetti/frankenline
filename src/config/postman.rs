@@ -8,7 +8,14 @@ type Result<T> = std::result::Result<T, Error>;
 pub fn from_file(path: &str) -> Result<Config> {
     let text = fs::read_to_string(path)
         .map_err_with_context(|| format!("Error loading postman file: {}", path))?;
+
     from_string(text.as_str())
+        .map(|config| {
+            Config {
+                path: Some(path.to_string()),
+                ..config
+            }
+        })
 }
 
 fn from_string(text: &str) -> Result<Config> {
@@ -35,7 +42,6 @@ struct Item {
 }
 
 
-
 impl From<Postman> for Config {
     fn from(postman: Postman) -> Self {
         let commands = postman.item.into_iter().map(|item| {
@@ -44,9 +50,11 @@ impl From<Postman> for Config {
             }
         }).collect();
         Config {
-            description: postman.info.name,
+            description: format!("{} (Postman Collection)", postman.info.name),
             command: commands,
             import: None,
+            path: None,
+            children: None,
         }
     }
 }

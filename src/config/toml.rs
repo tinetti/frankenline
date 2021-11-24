@@ -7,7 +7,6 @@ type Result<T> = std::result::Result<T, Error>;
 
 
 pub fn from_file(path: &str) -> Result<Config> {
-    // todo: create helper functions to create various error
     let text = fs::read_to_string(path)
         .map_err_with_context(|| format!("Error loading from file: {}", path))?;
     from_string(text.as_str())

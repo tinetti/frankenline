@@ -8,7 +8,7 @@ use frankenline::config;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let config_arg = "config";
-    let print_commands_arg = "print-commands";
+    let print_config_arg = "print-commands";
 
     let matches = App::new("Frankenline")
         .version("1.0")
@@ -18,12 +18,13 @@ fn main() -> Result<(), Box<dyn Error>> {
             .short("c")
             .long("config")
             .value_name("FILE")
-            .default_value("~/.config/frankenline.toml")
+            .default_value("./frankenline.toml")
             .help("Sets a custom config file")
             .takes_value(true))
-        .arg(Arg::with_name(print_commands_arg)
+        .arg(Arg::with_name(print_config_arg)
             .short("p")
-            .help("Prints out the resolved commands"))
+            .long("print-config")
+            .help("Prints out the resolved configuration"))
         .get_matches();
 
     let config_path = matches.value_of(config_arg).unwrap();
@@ -32,10 +33,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         Err(e) => panic!("Execution failed!\n{}", e)
     };
 
-    if matches.is_present(print_commands_arg) {
-        for command in config.command {
-            println!("{:?}", command);
-        }
+    if matches.is_present(print_config_arg) {
+        let config_toml = toml::Value::try_from(&config).unwrap();
+        println!("\nfrankenline.toml:\n{}", config_toml)
     }
 
     // more program logic goes here...

@@ -1,19 +1,21 @@
 use std::fmt::{Display, Formatter};
-use serde::{Deserialize};
+use serde::{Serialize, Deserialize};
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub description: String,
     pub command: Vec<Command>,
+    pub path: Option<String>,
     pub import: Option<Vec<Import>>,
+    pub children: Option<Vec<Config>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Command {
     pub name: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Import {
     #[serde(rename = "type")]
     pub import_type: ImportType,
@@ -26,7 +28,7 @@ impl Display for Import {
     }
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum ImportType {
     Postman
 }
