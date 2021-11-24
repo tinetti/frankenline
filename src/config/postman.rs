@@ -1,15 +1,19 @@
-use std::error::Error;
 use std::fs;
 use serde::{Deserialize};
+use crate::config::errors::{Error, MapErrWithContext};
 use crate::config::model::{Command, Config};
 
-pub fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
-    let text = fs::read_to_string(path)?;
+type Result<T> = std::result::Result<T, Error>;
+
+pub fn from_file(path: &str) -> Result<Config> {
+    let text = fs::read_to_string(path)
+        .map_err_with_context(|| format!("Error loading postman file: {}", path))?;
     from_string(text.as_str())
 }
 
-fn from_string(text: &str) -> Result<Config, Box<dyn Error>> {
-    let postman: Postman = serde_json::from_str(text)?;
+fn from_string(text: &str) -> Result<Config> {
+    let postman: Postman = serde_json::from_str(text)
+        .map_err_with_context(|| "Error parsing postman text")?;
     let config = Config::from(postman);
     Ok(config)
 }
@@ -49,11 +53,10 @@ impl From<Postman> for Config {
 
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
     use super::*;
 
     #[test]
-    fn test_deserialize_postman_from_string() -> Result<(), Box<dyn Error>> {
+    fn test_deserialize_postman_from_string() -> Result<()> {
         let text = r#"
         {
             "info": {

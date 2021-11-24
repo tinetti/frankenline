@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use serde::{Deserialize};
 
 #[derive(Deserialize, Debug)]
@@ -19,7 +20,19 @@ pub struct Import {
     pub path: String,
 }
 
+impl Display for Import {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(Deserialize, Debug)]
 pub enum ImportType {
     Postman
+}
+
+impl Display for ImportType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }

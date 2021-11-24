@@ -1,15 +1,21 @@
-use std::error::Error;
 use std::fs;
 
-use super::model::Config;
+use crate::config::errors::{Error, MapErrWithContext};
+use crate::config::model::Config;
 
-pub fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
-    let text = fs::read_to_string(path)?;
+type Result<T> = std::result::Result<T, Error>;
+
+
+pub fn from_file(path: &str) -> Result<Config> {
+    // todo: create helper functions to create various error
+    let text = fs::read_to_string(path)
+        .map_err_with_context(|| format!("Error loading from file: {}", path))?;
     from_string(text.as_str())
 }
 
-fn from_string(text: &str) -> Result<Config, Box<dyn Error>> {
-    let config = toml::from_str(text)?;
+fn from_string(text: &str) -> Result<Config> {
+    let config = toml::from_str(text)
+        .map_err_with_context(|| "Error parsing toml")?;
     Ok(config)
 }
 
@@ -19,7 +25,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_string() -> Result<(), Box<dyn Error>> {
+    fn test_from_string() -> Result<()> {
         let text = r#"
             description = 'find and grep'
 

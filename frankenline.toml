@@ -1,3 +1,5 @@
+description = "frankenline reference config"
+
 [[command]]
 name = "find in files"
 command = "find $dir -type f -exec grep -nis $pattern {} echo \\;"
