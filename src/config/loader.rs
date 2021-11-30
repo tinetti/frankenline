@@ -1,23 +1,22 @@
-use crate::config::errors::MapErrWithContext;
-use crate::config::model::{Config, Import, ImportType};
-use crate::config::toml::from_file as from_toml_file;
-use crate::config::postman::from_file as from_postman_file;
-use crate::config::errors::Error;
+use std::path::Path;
 
-type Result<T> = std::result::Result<T, Error>;
+use crate::config::model::*;
+use crate::config::postman;
+use crate::config::toml;
 
-pub fn load(path: &str) -> Result<Config> {
-    let original_config = from_toml_file(path)
-        .map_err_with_context(|| format!("Error loading: {}", path))
-        .map(|config| {
-            Config {
-                path: Some(path.to_string()),
-                ..config
-            }
-        })?;
+#[derive(Debug)]
+pub enum Error {
+    TomlError(toml::Error)
+}
 
-    let config = match original_config.import {
-        None => original_config,
+trait ConfigParser {
+    fn from_string<S: AsRef<str>>(json: S) -> Result<Config, String>;
+}
+
+pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+    let config = toml::from_file(&path)?;
+    let config = match config.import {
+        None => config,
         Some(ref imports) => {
             let children = imports.into_iter()
                 .map(from_import)
@@ -33,18 +32,21 @@ pub fn load(path: &str) -> Result<Config> {
                 .collect();
             Config {
                 children: Some(children),
-                ..original_config
+                ..config
             }
         }
     };
     Ok(config)
 }
 
-fn from_import(import: &Import) -> Result<Config> {
+fn from_import(import: &Import) -> Result<Config, postman::Error> {
     match import.import_type {
-        ImportType::Postman =>
-            from_postman_file(import.path.as_str())
-                .map_err_with_context(|| format!("Error importing postman file: {}", import.path))
+        ImportType::Postman => postman::from_file(&import.path)
     }
 }
 
+impl From<toml::Error> for Error {
+    fn from(err: toml::Error) -> Self {
+        Error::TomlError(err)
+    }
+}

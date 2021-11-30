@@ -28,7 +28,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_matches();
 
     let config_path = matches.value_of(config_arg).unwrap();
-    let config = match config::loader::load(config_path) {
+    let config = match config::load(config_path) {
         Ok(c) => c,
         Err(e) => panic!("Execution failed!\n{}", e)
     };
@@ -38,6 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         println!("\nfrankenline.toml:\n{}", config_toml)
     }
 
+    // let command = select_command()
     // more program logic goes here...
     Ok(())
 }

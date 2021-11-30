@@ -2,7 +2,7 @@ description = 'find and grep'
 
 [[import]]
 type = 'Postman'
-path = 'Frankenline.postman_collection.json'
+path = 'tests/Frankenline.postman_collection.json'
 
 [[command]]
 name = 'x'
