@@ -1,39 +1,19 @@
-use std::fs;
-use std::io;
-use std::path::Path;
-
+use crate::config::error::Error;
+use crate::config::loader::ConfigParser;
 use crate::config::model::Config;
 
+pub struct TomlConfigParser {}
 
-#[derive(Debug)]
-pub enum Error {
-    Io(io::Error),
-    Serde(toml::de::Error),
-}
-
-pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
-    let text = fs::read_to_string(&path)?;
-    let config = from_string(text)?;
-    let config = Config {
-        path: Some(path.as_ref().to_path_buf()),
-        ..config
-    };
-    Ok(config)
-}
-
-fn from_string<S: AsRef<str>>(text: S) -> Result<Config, toml::de::Error> {
-    toml::from_str(text.as_ref())
-}
-
-impl From<io::Error> for Error {
-    fn from(err: io::Error) -> Self {
-        Error::Io(err)
+impl ConfigParser for TomlConfigParser {
+    fn parse<S: AsRef<str>>(toml: S) -> Result<Config, Error> {
+        let config = toml::from_str(toml.as_ref())?;
+        Ok(config)
     }
 }
 
 impl From<toml::de::Error> for Error {
     fn from(err: toml::de::Error) -> Self {
-        Error::Serde(err)
+        Error::new(err)
     }
 }
 

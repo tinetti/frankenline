@@ -1,12 +1,10 @@
 extern crate frankenline;
 
-use std::error::Error;
-
 use clap::{App, Arg};
+
 use frankenline::config;
 
-
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), String> {
     let config_arg = "config";
     let print_config_arg = "print-commands";
 
@@ -28,10 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .get_matches();
 
     let config_path = matches.value_of(config_arg).unwrap();
-    let config = match config::load(config_path) {
-        Ok(c) => c,
-        Err(e) => panic!("Execution failed!\n{}", e)
-    };
+    let config = config::load(config_path).map_err(|err| err.message)?;
 
     if matches.is_present(print_config_arg) {
         let config_toml = toml::Value::try_from(&config).unwrap();

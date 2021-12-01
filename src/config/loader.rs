@@ -1,20 +1,17 @@
+use std::fs;
 use std::path::Path;
 
+use crate::config::error::Error;
 use crate::config::model::*;
-use crate::config::postman;
-use crate::config::toml;
+use crate::config::postman::PostmanConfigParser;
+use crate::config::toml::TomlConfigParser;
 
-#[derive(Debug)]
-pub enum Error {
-    TomlError(toml::Error)
-}
-
-trait ConfigParser {
-    fn from_string<S: AsRef<str>>(json: S) -> Result<Config, String>;
+pub trait ConfigParser {
+    fn parse<S: AsRef<str>>(text: S) -> Result<Config, Error>;
 }
 
 pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
-    let config = toml::from_file(&path)?;
+    let config = load_toml_file(&path)?;
     let config = match config.import {
         None => config,
         Some(ref imports) => {
@@ -24,7 +21,7 @@ pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
                     match import {
                         Ok(config) => Some(config),
                         Err(e) => {
-                            println!("{}", e);
+                            println!("Warning: {}", e);
                             None
                         }
                     }
@@ -39,14 +36,25 @@ pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
     Ok(config)
 }
 
-fn from_import(import: &Import) -> Result<Config, postman::Error> {
-    match import.import_type {
-        ImportType::Postman => postman::from_file(&import.path)
-    }
+fn load_postman_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+    let text = fs::read_to_string(&path)
+        .map_err(|err| Error::new(format!("Unable to load Postman file '{}': {}", path.as_ref().display(), err)))?;
+    let mut config = PostmanConfigParser::parse(text)?;
+    config.path = Some(path.as_ref().to_path_buf());
+    Ok(config)
 }
 
-impl From<toml::Error> for Error {
-    fn from(err: toml::Error) -> Self {
-        Error::TomlError(err)
+fn load_toml_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+    let text = fs::read_to_string(&path)
+        .map_err(|err| Error::new(format!("Unable to load config file '{}': {}", path.as_ref().display(), err)))?;
+    let mut config = TomlConfigParser::parse(text)?;
+    config.path = Some(path.as_ref().to_path_buf());
+    Ok(config)
+}
+
+
+fn from_import(import: &Import) -> Result<Config, Error> {
+    match import.import_type {
+        ImportType::Postman => load_postman_file(&import.path)
     }
 }

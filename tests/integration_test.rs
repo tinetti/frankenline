@@ -1,10 +1,10 @@
 #[cfg(test)]
 mod tests {
-    use std::error::Error;
     use frankenline::config;
+    use frankenline::config::error::Error;
 
     #[test]
-    fn test_from_file() -> Result<(), Box<dyn Error>> {
+    fn test_from_file() -> Result<(), Error> {
         let config = config::load("tests/integration_test.toml")?;
         assert_eq!(config.description, "find and grep");
         assert_eq!(config.command.len(), 2);

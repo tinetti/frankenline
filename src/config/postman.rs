@@ -1,51 +1,22 @@
-use std::fmt;
-use std::fs;
-use std::path::Path;
-
 use serde::Deserialize;
 
+use crate::config::error::Error;
+use crate::config::loader::ConfigParser;
 use crate::config::model::{Command, Config};
 
-#[derive(Debug)]
-pub enum Error {
-    Io(std::io::Error),
-    Serde(serde_json::Error),
-}
+pub struct PostmanConfigParser {}
 
-pub fn from_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
-    let text = fs::read_to_string(&path)?;
-    let config = from_string(text)?;
-    let config = Config {
-        path: Some(path.as_ref().to_path_buf()),
-        ..config
-    };
-    Ok(config)
-}
-
-pub fn from_string<S: AsRef<str>>(json: S) -> Result<Config, Error> {
-    serde_json::from_str::<Postman>(json.as_ref())
-        .map(Config::from)
-        .map_err(|err| err.into())
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Error::Io(cause) => write!(f, "IO Error({})", cause),
-            Error::Serde(cause) => write!(f, "Serde Error({})", cause),
-        }
-    }
-}
-
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Self {
-        Error::Io(err)
+impl ConfigParser for PostmanConfigParser {
+    fn parse<S: AsRef<str>>(json: S) -> Result<Config, Error> {
+        let postman: Postman = serde_json::from_str(json.as_ref())?;
+        let config: Config = Config::from(postman);
+        Ok(config)
     }
 }
 
 impl From<serde_json::error::Error> for Error {
     fn from(err: serde_json::Error) -> Self {
-        Error::Serde(err)
+        Error::new(err)
     }
 }
 
@@ -129,7 +100,7 @@ mod tests {
             ]
         }
         "#;
-        let config = from_string(text)?;
+        let config = parse(text)?;
 
         assert_eq!(config.description, "Frankenline (Postman Collection)");
         Ok(())
