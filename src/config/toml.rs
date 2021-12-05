@@ -32,7 +32,7 @@ mod tests {
             [[command]]
             name = 'y'
         "#;
-        let config = from_string(text)?;
+        let config = TomlConfigParser::parse(text)?;
 
         assert_eq!(config.description, "find and grep");
         assert_eq!(config.command.len(), 2);

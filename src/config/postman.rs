@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_deserialize_postman_from_string() -> Result<(), Error> {
-        let text = r#"
+        let text: &str = r#"
         {
             "info": {
                 "_postman_id": "41e697c5-cadb-437b-b2e9-336c00724c8f",
@@ -100,7 +100,7 @@ mod tests {
             ]
         }
         "#;
-        let config = parse(text)?;
+        let config = PostmanConfigParser::parse(text)?;
 
         assert_eq!(config.description, "Frankenline (Postman Collection)");
         Ok(())
