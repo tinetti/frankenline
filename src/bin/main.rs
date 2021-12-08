@@ -3,8 +3,10 @@ extern crate frankenline;
 use clap::{App, Arg};
 
 use frankenline::config;
+use frankenline::error::Result;
+use frankenline::selector;
 
-fn main() -> Result<(), String> {
+fn main() -> Result<()> {
     let config_arg = "config";
     let print_config_arg = "print-commands";
 
@@ -26,28 +28,17 @@ fn main() -> Result<(), String> {
         .get_matches();
 
     let config_path = matches.value_of(config_arg).unwrap();
-    let config = config::load(config_path).map_err(|err| err.message)?;
+    let config = config::load(config_path)?;
 
     if matches.is_present(print_config_arg) {
         let config_toml = toml::Value::try_from(&config).unwrap();
-        println!("\nfrankenline.toml:\n{}", config_toml)
+        println!("\nfrankenline configuration:\n{}", config_toml)
     }
 
-    // let command = select_command()
+    if let Some(command) = selector::select_command(&config)? {
+        println!("selected command:\n{:?}", command)
+    }
+
     // more program logic goes here...
     Ok(())
 }
-
-
-// fn main() -> Result<(), Box<dyn Error>> {
-//     println!("Hello, world!");
-//     let config = frankenline::config::loader::load("frankenline.toml")?;
-//     let mut args: Vec<String> = env::args().collect();
-//
-//     // trim off the first arg since it's just the frankenline command itself
-//     args.drain(0..1);
-//
-//     let command = frankenline::selector::select_command(&config, &args);
-//     println!("{}", command.name);
-//     Ok(())
-// }

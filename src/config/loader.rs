@@ -1,16 +1,16 @@
 use std::fs;
 use std::path::Path;
 
-use crate::config::error::Error;
+use crate::error::{Error, Result};
 use crate::config::model::*;
 use crate::config::postman::PostmanConfigParser;
 use crate::config::toml::TomlConfigParser;
 
 pub trait ConfigParser {
-    fn parse<S: AsRef<str>>(text: S) -> Result<Config, Error>;
+    fn parse<S: AsRef<str>>(text: S) -> Result<Config>;
 }
 
-pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+pub fn load<P: AsRef<Path>>(path: P) -> Result<Config> {
     let config = load_toml_file(&path)?;
     let config = match config.import {
         None => config,
@@ -36,7 +36,7 @@ pub fn load<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
     Ok(config)
 }
 
-fn load_postman_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+fn load_postman_file<P: AsRef<Path>>(path: P) -> Result<Config> {
     let text = fs::read_to_string(&path)
         .map_err(|err| Error::new(format!("Unable to load Postman file '{}': {}", path.as_ref().display(), err)))?;
     let mut config = PostmanConfigParser::parse(text)?;
@@ -44,7 +44,7 @@ fn load_postman_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
     Ok(config)
 }
 
-fn load_toml_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
+fn load_toml_file<P: AsRef<Path>>(path: P) -> Result<Config> {
     let text = fs::read_to_string(&path)
         .map_err(|err| Error::new(format!("Unable to load config file '{}': {}", path.as_ref().display(), err)))?;
     let mut config = TomlConfigParser::parse(text)?;
@@ -53,7 +53,7 @@ fn load_toml_file<P: AsRef<Path>>(path: P) -> Result<Config, Error> {
 }
 
 
-fn from_import(import: &Import) -> Result<Config, Error> {
+fn from_import(import: &Import) -> Result<Config> {
     match import.import_type {
         ImportType::Postman => load_postman_file(&import.path)
     }

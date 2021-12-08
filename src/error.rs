@@ -5,11 +5,7 @@ pub struct Error {
     pub message: String,
 }
 
-// impl <S: AsRef<str>> From<S> for Error {
-//     fn from(text: S) -> Self {
-//         Error { message: format!("{}", text.as_ref()) }
-//     }
-// }
+pub type Result<T> = std::result::Result<T, Error>;
 
 impl Error {
     pub fn new<D: fmt::Display>(d: D) -> Error {
@@ -22,10 +18,3 @@ impl fmt::Display for Error {
         write!(f, "{}", self.message)
     }
 }
-
-// impl From<io::Error> for Error {
-//     fn from(err: io::Error) -> Self {
-//         Error { message: format!("{}", err) }
-//     }
-// }
-

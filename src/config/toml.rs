@@ -1,11 +1,11 @@
-use crate::config::error::Error;
+use crate::error::{Error, Result};
 use crate::config::loader::ConfigParser;
 use crate::config::model::Config;
 
 pub struct TomlConfigParser {}
 
 impl ConfigParser for TomlConfigParser {
-    fn parse<S: AsRef<str>>(toml: S) -> Result<Config, Error> {
+    fn parse<S: AsRef<str>>(toml: S) -> Result<Config> {
         let config = toml::from_str(toml.as_ref())?;
         Ok(config)
     }
@@ -22,7 +22,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_from_string() -> Result<(), Error> {
+    fn test_from_string() -> Result<()> {
         let text = r#"
             description = 'find and grep'
 

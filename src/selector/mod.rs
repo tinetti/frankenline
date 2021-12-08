@@ -1,11 +1,23 @@
+use crate::error::Result;
 use crate::config::model::{Config, Command};
-mod args_selector;
+use crate::selector::fzf_selector::FzfSelector;
 
-pub fn select_command<'a>(config: &'a Config, args: &Vec<String>) -> &'a Command {
-    let command = args_selector::select_command_from_args(config, args);
-    if let Some(args_cmd) = &command {
-        return args_cmd;
-    }
+mod fzf_selector;
 
-    panic!("no command specified!")
+pub trait CommandSelector {
+    fn select_command(self, config: &Config) -> Result<Option<&Command>>;
+}
+
+pub fn select_command(config: &Config) -> Result<Option<&Command>> {
+    let custom_command: Option<Vec<String>> = config.fzf_command.as_ref()
+        .map(|commands| {
+            commands.into_iter().map(|command| {
+                format!("{}", command)
+            })
+                .collect()
+        });
+
+    FzfSelector {
+        fzf_command: custom_command,
+    }.select_command(config)
 }

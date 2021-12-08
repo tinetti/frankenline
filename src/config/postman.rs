@@ -1,13 +1,13 @@
 use serde::Deserialize;
 
-use crate::config::error::Error;
+use crate::error::{Error, Result};
 use crate::config::loader::ConfigParser;
 use crate::config::model::{Command, Config};
 
 pub struct PostmanConfigParser {}
 
 impl ConfigParser for PostmanConfigParser {
-    fn parse<S: AsRef<str>>(json: S) -> Result<Config, Error> {
+    fn parse<S: AsRef<str>>(json: S) -> Result<Config> {
         let postman: Postman = serde_json::from_str(json.as_ref())?;
         let config: Config = Config::from(postman);
         Ok(config)
@@ -50,6 +50,7 @@ impl From<Postman> for Config {
             import: None,
             path: None,
             children: None,
+            fzf_command: None,
         }
     }
 }
@@ -59,7 +60,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_deserialize_postman_from_string() -> Result<(), Error> {
+    fn test_deserialize_postman_from_string() -> Result<()> {
         let text: &str = r#"
         {
             "info": {

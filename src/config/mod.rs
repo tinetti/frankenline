@@ -1,12 +1,12 @@
 use std::path::Path;
+use crate::error::Result;
 
-pub mod error;
 pub mod model;
 mod loader;
 mod postman;
 mod toml;
 
-pub fn load<P: AsRef<Path>>(path: P) -> Result<model::Config, error::Error> {
+pub fn load<P: AsRef<Path>>(path: P) -> Result<model::Config> {
     let config = loader::load(&path)?;
     Ok(config)
 }

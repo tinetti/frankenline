@@ -1,4 +1,5 @@
 description = 'find and grep'
+#fzf_command = [ 'tee', '/tmp/deleteme' ]
 
 [[import]]
 type = 'Postman'
