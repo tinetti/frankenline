@@ -7,6 +7,8 @@ path = 'tests/Frankenline.postman_collection.json'
 
 [[command]]
 name = 'x'
+template = 'echo "x"'
 
 [[command]]
 name = 'y'
+template = 'echo "y"'

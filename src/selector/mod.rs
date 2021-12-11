@@ -2,7 +2,7 @@ use crate::error::Result;
 use crate::config::model::{Config, Command};
 use crate::selector::fzf_selector::FzfSelector;
 
-mod fzf_selector;
+pub mod fzf_selector;
 
 pub trait CommandSelector {
     fn select_command(self, config: &Config) -> Result<Option<&Command>>;

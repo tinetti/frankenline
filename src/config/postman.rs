@@ -6,8 +6,8 @@ use crate::config::model::{Command, Config};
 
 pub struct PostmanConfigParser {}
 
-impl ConfigParser for PostmanConfigParser {
-    fn parse<S: AsRef<str>>(json: S) -> Result<Config> {
+impl<S: AsRef<str>> ConfigParser<S> for PostmanConfigParser {
+    fn parse(&self, json: S) -> Result<Config> {
         let postman: Postman = serde_json::from_str(json.as_ref())?;
         let config: Config = Config::from(postman);
         Ok(config)
@@ -34,23 +34,37 @@ struct Info {
 #[derive(Deserialize, Debug)]
 struct Item {
     name: String,
+    request: Request,
+}
+
+#[derive(Deserialize, Debug)]
+struct Request {
+    url: URL,
+}
+
+#[derive(Deserialize, Debug)]
+struct URL {
+    raw: String,
 }
 
 
 impl From<Postman> for Config {
     fn from(postman: Postman) -> Self {
         let commands = postman.item.into_iter().map(|item| {
-            Command {
-                name: item.name,
-            }
+            let template = format!("curl \"{}\"", item.request.url.raw.trim());
+            Command::new(item.name, template)
         }).collect();
         Config {
+            commands,
             description: format!("{} (Postman Collection)", postman.info.name),
-            command: commands,
             import: None,
             path: None,
             children: None,
+            parent: None,
             fzf_command: None,
+            fzf_layout: None,
+            fzf_preview: None,
+            fzf_preview_window: None,
         }
     }
 }
@@ -75,7 +89,7 @@ mod tests {
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3",
+                            "raw": "  https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3  ",
                             "protocol": "https",
                             "host": [
                                 "dog-facts-api",
@@ -101,9 +115,17 @@ mod tests {
             ]
         }
         "#;
-        let config = PostmanConfigParser::parse(text)?;
 
+        let config = PostmanConfigParser{}.parse( text)?;
         assert_eq!(config.description, "Frankenline (Postman Collection)");
+
+        let commands = &config.commands;
+        assert_eq!(commands.len(), 1);
+
+        let command = &commands[0];
+        assert_eq!(command.name, "example - get json from api");
+        assert_eq!(command.template, "curl \"https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3\"");
+
         Ok(())
     }
 }
