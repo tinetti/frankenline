@@ -12,7 +12,8 @@ pub struct Config {
 
     pub children: Option<Vec<Config>>,
     #[serde(skip_serializing)]
-    pub import: Option<Vec<Import>>,
+    #[serde(alias = "import")]
+    pub imports: Option<Vec<String>>,
     #[serde(skip_serializing)]
     pub parent: Option<Box<Config>>,
 
@@ -52,19 +53,6 @@ impl Command {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Import {
-    #[serde(rename = "type")]
-    pub import_type: ImportType,
-    pub path: String,
-}
-
-impl Display for Import {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub enum ImportType {
     Postman
 }
@@ -87,7 +75,7 @@ mod tests {
             children,
             description: "".to_string(),
             path: None,
-            import: None,
+            imports: None,
             parent: None,
             fzf_command: None,
             fzf_layout: None,

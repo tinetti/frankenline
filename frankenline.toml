@@ -1,0 +1,6 @@
+
+        description: Welcome to Frankenline!  Here are some sample commands to get you started :)
+        commands:
+        - name: edit frankenline config file
+          template: $EDITOR /home/tinetti/.config/frankenline.toml
+        

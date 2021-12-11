@@ -7,12 +7,44 @@ use crate::error::{Error, Result};
 use crate::selector::CommandSelector;
 
 pub struct FzfSelector {
-    pub fzf_command: Option<Vec<String>>
+    pub fzf_command: Option<Vec<String>>,
 }
 
 impl FzfSelector {
-    fn generate_fzf_command(self, config: &Config) -> Vec<String> {
+    fn generate_fzf_line(index: usize, command: &&Command) -> String {
+        format!(
+            "{} {:30}{}\n",
+            index,
+            command.name,
+            command.template
+        )
+    }
 
+    pub fn generate_fzf_preview(config: &Config, command: &Command) -> String {
+        format!(
+            "{} @ {}\n{}\n{}",
+            config.description,
+            config.path.as_ref().unwrap().display(),
+            command.name,
+            command.template
+        )
+    }
+
+    pub fn parse_command_index<S: AsRef<str>>(fzf_line: S) -> Result<usize> {
+        let fzf_line = fzf_line.as_ref();
+        let index = fzf_line
+            .split(" ")
+            .next()
+            .ok_or(Error::new(format!("Error: command index not found in fzf line: {}", fzf_line)))?;
+
+        let index = index
+            .parse::<usize>()
+            .map_err(|err| Error::new(format!("Error: unable to parse command index in fzf line: '{}': {}", fzf_line, err)))?;
+
+        Ok(index)
+    }
+
+    fn generate_fzf_command(self, config: &Config) -> Vec<String> {
         match self.fzf_command {
             Some(c) => c,
             None => {
@@ -32,41 +64,12 @@ impl FzfSelector {
                 vec!("fzf".to_string(),
                      "--ansi".to_string(),
                      "--with-nth=2..".to_string(),
-                     "--read0".to_string(),
                      format!("--layout={}", layout),
                      format!("--preview={}", preview),
                      format!("--preview-window={}", preview_window),
                 )
-            },
+            }
         }
-    }
-
-    fn generate_fzf_line(index: usize, command: &&Command) -> String {
-        let fzf_line = format!("{} {:30}{}\n\0", index, command.name, command.template);
-        fzf_line
-    }
-
-    pub fn parse_command_index<S: AsRef<str>>(fzf_line: S) -> Result<usize> {
-        let fzf_line = fzf_line.as_ref();
-        let index = fzf_line
-            .split(" ")
-            .next()
-            .ok_or(Error::new(format!("Error: command index not found in fzf line: {}", fzf_line)))?;
-
-        let index = index
-            .parse::<usize>()
-            .map_err(|err| Error::new(format!("Error: unable to parse command index in fzf line: '{}': {}", fzf_line, err)))?;
-
-        Ok(index)
-    }
-
-    pub fn generate_fzf_preview(config: &Config, command: &Command) -> String {
-        format!(
-            "config file: {}\ncommand name: {}\ncommand template: {}",
-            config.path.as_ref().unwrap().display(),
-            command.name,
-            command.template
-        )
     }
 }
 

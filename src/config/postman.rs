@@ -57,7 +57,7 @@ impl From<Postman> for Config {
         Config {
             commands,
             description: format!("{} (Postman Collection)", postman.info.name),
-            import: None,
+            imports: None,
             path: None,
             children: None,
             parent: None,

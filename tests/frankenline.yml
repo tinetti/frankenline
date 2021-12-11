@@ -1,0 +1,6 @@
+description: yaml config file example; this should be the root of the config hierarchy
+imports:
+  - tests/frankenline.hocon
+commands:
+  - name: edit yaml config file
+    template: $EDITOR $HOME/.config/frankenline.yml
