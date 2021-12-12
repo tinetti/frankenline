@@ -1,9 +1,9 @@
 __frankenline() {
   setopt localoptions pipefail no_aliases 2> /dev/null
   eval "frankenline"
-  echo -n "${(q)item} "
-  local ret=$?
-  echo
+#  echo -n "${(q)item}"
+ local ret=$?
+#  echo
   return $ret
 }
 

@@ -49,11 +49,11 @@ mod tests {
         let output_file_contents = fs::read_to_string(output_filename).unwrap();
         assert_eq!(output_file_contents,
                    r#"
-0 edit yaml config file         $EDITOR $HOME/.config/frankenline.yml
-1 edit hocon config file        $EDITOR $HOME/.config/frankenline.hocon
-2 edit toml config file         $EDITOR $HOME/.config/frankenline.toml
-3 example - get json from api   curl "https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3"
-"#.trim_start());
+0 edit yaml config file                                                       $EDITOR $HOME/.config/frankenline.yml
+1 edit hocon config file                                                      $EDITOR $HOME/.config/frankenline.hocon
+2 edit toml config file                                                       $EDITOR $HOME/.config/frankenline.toml
+3 example - get json from api                                                 curl "https://dog-facts-api.herokuapp.com/api/v1/resources/dogs?number=3"
+"#.trim_start().replace("\n", "\0"));
 
         Ok(())
     }

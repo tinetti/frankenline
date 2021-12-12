@@ -11,12 +11,12 @@ pub struct FzfSelector {
 }
 
 impl FzfSelector {
-    fn generate_fzf_line(index: usize, command: &&Command) -> String {
+    fn generate_fzf_line(index: usize, command: &Command) -> String {
         format!(
-            "{} {:50} {}\0",
-            index,
-            command.name,
-            command.template
+            "{index} {name:75} {template}\0",
+            index = index,
+            name = command.name,
+            template = command.template
         )
     }
 

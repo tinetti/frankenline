@@ -9,10 +9,32 @@ pub mod config;
 pub mod selector;
 pub mod error;
 
-pub fn default_config_file() -> PathBuf {
+pub fn default_config_file_path() -> PathBuf {
     let home = dirs::home_dir().unwrap_or_default();
     let file = format!("{}/.config/frankenline.yml", home.display());
     PathBuf::from(file)
+}
+
+pub fn default_config_file_contents(config_file: &Path) -> String {
+    format!("
+description: Welcome to Frankenline!  Here are some sample commands to get you started :)
+
+commands:
+- name: print this config file
+  template: frankenline --print-config yaml
+- name: copy this config file to your home directory
+  template: cp {path} ~/.config/frankenline.example.yml
+- name: edit frankenline config file
+  template: eval ${{EDITOR:-vi}} {path}
+
+imports: ~
+fzf_command: ~
+fzf_layout: ~
+fzf_preview: ~
+fzf_preview_window: ~
+",
+            path = &config_file.display()
+    )
 }
 
 pub fn run(config_path: &str, verbose: bool, print_config: Option<&str>, fzf_preview: Option<&str>) -> error::Result<()> {
@@ -54,25 +76,7 @@ pub fn run(config_path: &str, verbose: bool, print_config: Option<&str>, fzf_pre
 
 fn example_config() -> Result<Config> {
     let config_file = Path::new("/tmp/frankenline.example.yml");
-    let config_file_contents = format!("
-description: Welcome to Frankenline!  Here are some sample commands to get you started :)
-
-commands:
-- name: print this config file
-  template: frankenline --print-config yaml
-- name: copy this config file to your home directory
-  template: cp {path} ~/.config/frankenline.example.yml
-- name: edit frankenline config file
-  template: eval ${{EDITOR:-vi}} {path}
-
-imports: ~
-fzf_command: ~
-fzf_layout: ~
-fzf_preview: ~
-fzf_preview_window: ~
-",
-        path = &config_file.display()
-    );
+    let config_file_contents = default_config_file_contents(config_file);
     let config_file_contents = config_file_contents.trim_start();
     fs::write(&config_file, config_file_contents)?;
 
