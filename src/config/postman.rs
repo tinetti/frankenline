@@ -65,6 +65,10 @@ impl From<Postman> for Config {
             fzf_layout: None,
             fzf_preview: None,
             fzf_preview_window: None,
+            fzf_preview_description_color: None,
+            fzf_preview_name_color: None,
+            fzf_preview_path_color: None,
+            fzf_preview_template_color: None
         }
     }
 }

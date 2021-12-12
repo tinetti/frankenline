@@ -17,7 +17,11 @@ pub fn select_command(config: &Config) -> Result<Option<&Command>> {
                 .collect()
         });
 
-    FzfSelector {
+    let fzf_selector = FzfSelector::new(config);
+    let fzf_selector = FzfSelector {
         fzf_command: custom_command,
-    }.select_command(config)
+        ..fzf_selector
+    };
+
+    fzf_selector.select_command(config)
 }

@@ -22,16 +22,14 @@ description: Welcome to Frankenline!  Here are some sample commands to get you s
 commands:
 - name: print this config file
   template: frankenline --print-config yaml
+
 - name: copy this config file to your home directory
   template: cp {path} ~/.config/frankenline.example.yml
+
 - name: edit frankenline config file
   template: eval ${{EDITOR:-vi}} {path}
 
-imports: ~
-fzf_command: ~
-fzf_layout: ~
-fzf_preview: ~
-fzf_preview_window: ~
+imports: []
 ",
             path = &config_file.display()
     )
@@ -57,10 +55,11 @@ pub fn run(config_path: &str, verbose: bool, print_config: Option<&str>, fzf_pre
     }
 
     if let Some(fzf_preview) = fzf_preview {
+        let fzf_selector = FzfSelector::new(&config);
         let index = FzfSelector::parse_command_index(fzf_preview)?;
         let commands = &config.command_iter().collect::<Vec<_>>();
         let (config, command) = commands[index];
-        print!("{}", FzfSelector::generate_fzf_preview(config, command));
+        print!("{}", fzf_selector.generate_fzf_preview(&config, command));
         return Ok(());
     }
 

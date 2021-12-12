@@ -2,15 +2,31 @@ use std::io::Write;
 use std::process;
 use std::process::Stdio;
 
+use ansi_term::Color::Fixed;
+
 use crate::config::model::{Command, Config};
 use crate::error::{Error, Result};
 use crate::selector::CommandSelector;
 
 pub struct FzfSelector {
     pub fzf_command: Option<Vec<String>>,
+    pub fzf_preview_description_color: u8,
+    pub fzf_preview_name_color: u8,
+    pub fzf_preview_path_color: u8,
+    pub fzf_preview_template_color: u8,
 }
 
 impl FzfSelector {
+    pub fn new(config: &Config) -> FzfSelector {
+        FzfSelector {
+            fzf_command: None,
+            fzf_preview_description_color: config.fzf_preview_description_color.unwrap_or(1),
+            fzf_preview_name_color: config.fzf_preview_name_color.unwrap_or(2),
+            fzf_preview_path_color: config.fzf_preview_path_color.unwrap_or(3),
+            fzf_preview_template_color: config.fzf_preview_template_color.unwrap_or(4),
+        }
+    }
+
     fn generate_fzf_line(index: usize, command: &Command) -> String {
         format!(
             "{index} {name:75} {template}\0",
@@ -20,13 +36,14 @@ impl FzfSelector {
         )
     }
 
-    pub fn generate_fzf_preview(config: &Config, command: &Command) -> String {
+    pub fn generate_fzf_preview(self, config: &Config, command: &Command) -> String {
+        let path = format!("{}", config.path.as_ref().unwrap().display());
         format!(
             "[{path}]\n{description}\n\n{name}\n{template}",
-            path = config.path.as_ref().unwrap().display(),
-            description = config.description,
-            name = command.name,
-            template = command.template,
+            path = Fixed(self.fzf_preview_path_color).paint(path),
+            description = Fixed(self.fzf_preview_description_color).paint(&config.description),
+            name = Fixed(self.fzf_preview_name_color).paint(&command.name),
+            template = Fixed(self.fzf_preview_template_color).paint(&command.template),
         )
     }
 

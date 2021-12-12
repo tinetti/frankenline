@@ -22,6 +22,10 @@ pub struct Config {
     pub fzf_layout: Option<String>,
     pub fzf_preview: Option<String>,
     pub fzf_preview_window: Option<String>,
+    pub fzf_preview_description_color: Option<u8>,
+    pub fzf_preview_name_color: Option<u8>,
+    pub fzf_preview_path_color: Option<u8>,
+    pub fzf_preview_template_color: Option<u8>,
 }
 
 impl Config {
@@ -82,6 +86,10 @@ mod tests {
             fzf_layout: None,
             fzf_preview: None,
             fzf_preview_window: None,
+            fzf_preview_description_color: None,
+            fzf_preview_name_color: None,
+            fzf_preview_path_color: None,
+            fzf_preview_template_color: None
         }
     }
 
