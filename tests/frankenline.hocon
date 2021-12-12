@@ -1,0 +1,7 @@
+{
+    description: hocon config file example; this should be imported from frankenline.yml
+    imports: [ tests/frankenline.toml ]
+    commands: [
+        { name: "edit hocon config file", template: "$EDITOR $HOME/.config/frankenline.hocon" }
+    ]
+}

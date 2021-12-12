@@ -6,19 +6,27 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub description: String,
-    pub command: Vec<Command>,
+    #[serde(alias = "command")]
+    pub commands: Vec<Command>,
+    #[serde(skip_serializing)]
     pub path: Option<PathBuf>,
 
     #[serde(skip_serializing)]
-    pub import: Option<Vec<Import>>,
     pub children: Option<Vec<Config>>,
+    #[serde(alias = "import")]
+    pub imports: Option<Vec<String>>,
+    #[serde(skip_serializing)]
+    pub parent: Option<Box<Config>>,
 
     pub fzf_command: Option<Vec<String>>,
+    pub fzf_layout: Option<String>,
+    pub fzf_preview: Option<String>,
+    pub fzf_preview_window: Option<String>,
 }
 
 impl Config {
-    pub(crate) fn command_iter<'a>(&'a self) -> Box<dyn Iterator<Item=&Command> + 'a> {
-        let command_iter = self.command.iter();
+    pub fn command_iter<'a>(&'a self) -> Box<dyn Iterator<Item=(&Config, &Command)> + 'a> {
+        let command_iter = self.commands.iter().map(move |command| (self, command));
         match &self.children {
             None => Box::new(command_iter),
             Some(configs) => {
@@ -33,18 +41,15 @@ impl Config {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Command {
     pub name: String,
+    pub template: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Import {
-    #[serde(rename = "type")]
-    pub import_type: ImportType,
-    pub path: String,
-}
-
-impl Display for Import {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:?}", self)
+impl Command {
+    pub(crate) fn new<S1: AsRef<str>, S2: AsRef<str>>(name: S1, template: S2) -> Command {
+        Command {
+            name: String::from(name.as_ref()),
+            template: String::from(template.as_ref()),
+        }
     }
 }
 
@@ -65,69 +70,68 @@ mod tests {
     use super::*;
     use crate::error::Result;
 
+    fn config(commands: Vec<Command>, children: Option<Vec<Config>>) -> Config {
+        Config {
+            commands,
+            children,
+            description: "".to_string(),
+            path: None,
+            imports: None,
+            parent: None,
+            fzf_command: None,
+            fzf_layout: None,
+            fzf_preview: None,
+            fzf_preview_window: None,
+        }
+    }
+
+    fn command(name: &str) -> Command {
+        Command::new(name, "")
+    }
 
     #[test]
     fn test_command_iter() -> Result<()> {
-        let config = Config {
-            description: "".to_string(),
-            command: vec![
-                Command { name: "grandparent-c1".to_string() },
-                Command { name: "grandparent-c2".to_string() },
+        let config = config(
+            vec![
+                command("grandparent-c1"),
+                command("grandparent-c2"),
             ],
-            path: None,
-            import: None,
-            fzf_command: None,
-            children: Some(vec![
-                Config {
-                    description: "".to_string(),
-                    command: vec![
-                        Command { name: "parent-1-c1".to_string() },
-                        Command { name: "parent-1-c2".to_string() },
+            Some(vec![
+                config(
+                    vec![
+                        command("parent-1-c1"),
+                        command("parent-1-c2"),
                     ],
-                    path: None,
-                    import: None,
-                    fzf_command: None,
-                    children: Some(vec![
-                        Config {
-                            description: "".to_string(),
-                            command: vec![
-                                Command { name: "grandchild-c1".to_string() },
-                                Command { name: "grandchild-c2".to_string() },
+                    Some(vec![
+                        config(
+                            vec![
+                                command("grandchild-c1"),
+                                command("grandchild-c2"),
                             ],
-                            path: None,
-                            import: None,
-                            fzf_command: None,
-                            children: None,
-                        }
+                            None,
+                        )
                     ]),
-                },
-                Config {
-                    description: "".to_string(),
-                    command: vec![
-                        Command { name: "child-2-c1".to_string() },
-                        Command { name: "child-2-c2".to_string() },
+                ),
+                config(
+                    vec![
+                        command("child-2-c1"),
+                        command("child-2-c2"),
                     ],
-                    path: None,
-                    import: None,
-                    fzf_command: None,
-                    children: None,
-                },
+                    None,
+                ),
             ]),
-        };
+        );
 
-        for x in config.command_iter() {
-            println!("{}", x.name);
-        }
-        let commands: Vec<&Command> = config.command_iter().collect();
+        let commands: Vec<(&Config, &Command)> = config.command_iter().collect();
         assert_eq!(commands.len(), 8);
-        assert_eq!(commands[0].name, "grandparent-c1".to_string());
-        assert_eq!(commands[1].name, "grandparent-c2".to_string());
-        assert_eq!(commands[2].name, "parent-1-c1".to_string());
-        assert_eq!(commands[3].name, "parent-1-c2".to_string());
-        assert_eq!(commands[4].name, "grandchild-c1".to_string());
-        assert_eq!(commands[5].name, "grandchild-c2".to_string());
-        assert_eq!(commands[6].name, "child-2-c1".to_string());
-        assert_eq!(commands[7].name, "child-2-c2".to_string());
+        assert_eq!(commands[0].1.name, "grandparent-c1".to_string());
+        assert_eq!(commands[1].1.name, "grandparent-c2".to_string());
+        assert_eq!(commands[2].1.name, "parent-1-c1".to_string());
+        assert_eq!(commands[3].1.name, "parent-1-c2".to_string());
+        assert_eq!(commands[4].1.name, "grandchild-c1".to_string());
+        assert_eq!(commands[5].1.name, "grandchild-c2".to_string());
+        assert_eq!(commands[6].1.name, "child-2-c1".to_string());
+        assert_eq!(commands[7].1.name, "child-2-c2".to_string());
 
         Ok(())
     }

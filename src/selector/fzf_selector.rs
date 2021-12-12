@@ -10,16 +10,74 @@ pub struct FzfSelector {
     pub fzf_command: Option<Vec<String>>,
 }
 
+impl FzfSelector {
+    fn generate_fzf_line(index: usize, command: &&Command) -> String {
+        format!(
+            "{} {:50} {}\0",
+            index,
+            command.name,
+            command.template
+        )
+    }
+
+    pub fn generate_fzf_preview(config: &Config, command: &Command) -> String {
+        format!(
+            "[{path}]\n{description}\n\n{name}\n{template}",
+            path = config.path.as_ref().unwrap().display(),
+            description = config.description,
+            name = command.name,
+            template = command.template,
+        )
+    }
+
+    pub fn parse_command_index<S: AsRef<str>>(fzf_line: S) -> Result<usize> {
+        let fzf_line = fzf_line.as_ref();
+        let index = fzf_line
+            .split(" ")
+            .next()
+            .ok_or(Error::new(format!("Error: command index not found in fzf line: {}", fzf_line)))?;
+
+        let index = index
+            .parse::<usize>()
+            .map_err(|err| Error::new(format!("Error: unable to parse command index in fzf line: '{}': {}", fzf_line, err)))?;
+
+        Ok(index)
+    }
+
+    fn generate_fzf_command(self, config: &Config) -> Vec<String> {
+        match self.fzf_command {
+            Some(c) => c,
+            None => {
+                let default_layout = "default".to_string();
+                let layout = &config.fzf_layout.as_ref()
+                    .unwrap_or(&default_layout);
+
+                let config_file = &config.path.as_ref().unwrap().display();
+                let default_preview = format!("frankenline --config {config} --fzf-preview {{}}", config = config_file);
+                let preview = &config.fzf_preview.as_ref()
+                    .unwrap_or(&default_preview);
+
+                let default_preview_window = "up:5".to_string();
+                let preview_window = &config.fzf_preview_window.as_ref()
+                    .unwrap_or(&default_preview_window);
+
+                vec!("fzf".to_string(),
+                     "--ansi".to_string(),
+                     "--with-nth=2..".to_string(),
+                     "--read0".to_string(),
+                     format!("--layout={}", layout),
+                     format!("--preview={}", preview),
+                     format!("--preview-window={}", preview_window),
+                )
+            }
+        }
+    }
+}
+
 impl CommandSelector for FzfSelector {
     fn select_command(self, config: &Config) -> Result<Option<&Command>> {
-        let commands: Vec<&Command> = config.command_iter().collect();
-
-        let fzf_command = match self.fzf_command {
-            Some(c) => c,
-            None => vec!("fzf".to_string(),
-                         "--no-multi".to_string(),
-                         "--with-nth=2..".to_string()),
-        };
+        let commands: Vec<(&Config, &Command)> = config.command_iter().collect();
+        let fzf_command = self.generate_fzf_command(config);
         let mut fzf_command = fzf_command.into_iter();
 
         let fzf_exe = fzf_command.next()
@@ -33,8 +91,10 @@ impl CommandSelector for FzfSelector {
             .map_err(|err| Error::new(format!("Error spawning fzf command: {}", err)))?;
 
         let child_stdin = child.stdin.as_mut().unwrap();
-        for (i, command) in commands.iter().enumerate() {
-            child_stdin.write_fmt(format_args!("{} {}\n", i, command.name))
+        for (i, (_config, command)) in commands.iter().enumerate() {
+            let fzf_line = Self::generate_fzf_line(i, command);
+            let fzf_line = fzf_line.as_bytes();
+            child_stdin.write(fzf_line)
                 .map_err(|err| Error::new(format!("Error writing command to fzf: {}", err)))?;
         }
 
@@ -47,16 +107,8 @@ impl CommandSelector for FzfSelector {
             Some(code) => Err(Error::new(format!("No command specified: fzf returned code: {}", code))),
         }?;
 
-        let index = output
-            .split(" ")
-            .next()
-            .ok_or(Error::new(format!("Error: command index not found in output: {}", output)))?;
-
-        let index = index
-            .parse::<usize>()
-            .map_err(|err| Error::new(format!("Error: unable to parse command index in output: '{}': {}", output, err)))?;
-
-        let command: &Command = commands.get(index)
+        let index = Self::parse_command_index(output.as_ref())?;
+        let (_config, command) = commands.get(index)
             .ok_or(Error::new(format!("Error: command index out of bounds ({} >= {})", index, commands.len())))?;
 
         Ok(Some(command))

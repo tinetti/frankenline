@@ -1,0 +1,9 @@
+description = 'toml config file example; this should be imported from frankenline.hocon'
+
+imports = [
+    'tests/Frankenline.postman_collection.json'
+]
+
+[[command]]
+name = 'edit toml config file'
+template = '$EDITOR $HOME/.config/frankenline.toml'
