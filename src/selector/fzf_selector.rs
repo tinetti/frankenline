@@ -51,11 +51,13 @@ impl FzfSelector {
 
     fn generate_fzf_line(&self, index: usize, command: &Command) -> String {
         let fmt = format!("{{index}} {{name:<{name_width}}} {{template}}\0", name_width = self.fzf_line_name_width);
-        let index = index.to_string();
+        let index = format!("{}", index.to_string());
+        let name = format!("{}", Fixed(self.fzf_preview_name_color).paint(&command.name));
+        let template = format!("{}", Fixed(self.fzf_preview_template_color).paint(&command.template));
         let mut vars = HashMap::new();
         vars.insert("index".to_string(), &index);
-        vars.insert("name".to_string(), &command.name);
-        vars.insert("template".to_string(), &command.template);
+        vars.insert("name".to_string(), &name);
+        vars.insert("template".to_string(), &template);
         fmt.format(&vars).unwrap_or(fmt)
     }
 
