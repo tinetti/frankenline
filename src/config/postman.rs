@@ -54,21 +54,11 @@ impl From<Postman> for Config {
             let template = format!("curl \"{}\"", item.request.url.raw.trim());
             Command::new(item.name, template)
         }).collect();
+        let config = Config::new();
         Config {
             commands,
             description: format!("{} (Postman Collection)", postman.info.name),
-            imports: None,
-            path: None,
-            children: None,
-            parent: None,
-            fzf_command: None,
-            fzf_layout: None,
-            fzf_preview: None,
-            fzf_preview_window: None,
-            fzf_preview_description_color: None,
-            fzf_preview_name_color: None,
-            fzf_preview_path_color: None,
-            fzf_preview_template_color: None
+            ..config
         }
     }
 }

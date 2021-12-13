@@ -1,15 +1,16 @@
 extern crate frankenline;
 
 use clap::{App, Arg};
+use frankenline::config::defaults::Defaults;
 
-use frankenline::{default_config_file_path, run};
+use frankenline::run;
 
 fn main() {
     let config_arg = "config";
     let print_config_arg = "print-config";
     let fzf_preview_arg = "fzf-preview";
     let verbose_arg = "debug";
-    let default_config_arg = default_config_file_path();
+    let default_config_arg = Defaults::default_config_file_path();
     let default_config_arg = format!("{}", default_config_arg.display());
 
     let matches = App::new("Frankenline")

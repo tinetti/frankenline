@@ -1,6 +1,7 @@
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
+use crate::config::defaults::Defaults;
 use crate::config::model::Config;
 use crate::error::{Error, Result};
 use crate::selector::fzf_selector::FzfSelector;
@@ -9,31 +10,6 @@ pub mod config;
 pub mod selector;
 pub mod error;
 
-pub fn default_config_file_path() -> PathBuf {
-    let home = dirs::home_dir().unwrap_or_default();
-    let file = format!("{}/.config/frankenline.yml", home.display());
-    PathBuf::from(file)
-}
-
-pub fn default_config_file_contents(config_file: &Path) -> String {
-    format!("
-description: Welcome to Frankenline!  Here are some sample commands to get you started :)
-
-commands:
-- name: print this config file
-  template: frankenline --print-config yaml
-
-- name: copy this config file to your home directory
-  template: cp {path} ~/.config/frankenline.example.yml
-
-- name: edit frankenline config file
-  template: eval ${{EDITOR:-vi}} {path}
-
-imports: []
-",
-            path = &config_file.display()
-    )
-}
 
 pub fn run(config_path: &str, verbose: bool, print_config: Option<&str>, fzf_preview: Option<&str>) -> error::Result<()> {
     let config = match config::load(config_path) {
@@ -74,8 +50,8 @@ pub fn run(config_path: &str, verbose: bool, print_config: Option<&str>, fzf_pre
 }
 
 fn example_config() -> Result<Config> {
-    let config_file = Path::new("/tmp/frankenline.example.yml");
-    let config_file_contents = default_config_file_contents(config_file);
+    let config_file = Path::new(Defaults::DEFAULT_TEMP_CONFIG_FILE);
+    let config_file_contents = Defaults::default_config_file_contents(config_file);
     let config_file_contents = config_file_contents.trim_start();
     fs::write(&config_file, config_file_contents)?;
 

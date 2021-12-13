@@ -19,6 +19,7 @@ pub struct Config {
     pub parent: Option<Box<Config>>,
 
     pub fzf_command: Option<Vec<String>>,
+    pub fzf_line_name_width: Option<String>,
     pub fzf_layout: Option<String>,
     pub fzf_preview: Option<String>,
     pub fzf_preview_window: Option<String>,
@@ -29,6 +30,26 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn new() -> Config {
+        Config {
+            description: "".to_string(),
+            imports: None,
+            path: None,
+            children: None,
+            parent: None,
+            fzf_command: None,
+            fzf_line_name_width: None,
+            fzf_layout: None,
+            fzf_preview: None,
+            fzf_preview_window: None,
+            fzf_preview_description_color: None,
+            fzf_preview_name_color: None,
+            fzf_preview_path_color: None,
+            fzf_preview_template_color: None,
+            commands: vec![]
+        }
+    }
+
     pub fn command_iter<'a>(&'a self) -> Box<dyn Iterator<Item=(&Config, &Command)> + 'a> {
         let command_iter = self.commands.iter().map(move |command| (self, command));
         match &self.children {
@@ -75,21 +96,11 @@ mod tests {
     use crate::error::Result;
 
     fn config(commands: Vec<Command>, children: Option<Vec<Config>>) -> Config {
+        let config = Config::new();
         Config {
             commands,
             children,
-            description: "".to_string(),
-            path: None,
-            imports: None,
-            parent: None,
-            fzf_command: None,
-            fzf_layout: None,
-            fzf_preview: None,
-            fzf_preview_window: None,
-            fzf_preview_description_color: None,
-            fzf_preview_name_color: None,
-            fzf_preview_path_color: None,
-            fzf_preview_template_color: None
+            ..config
         }
     }
 

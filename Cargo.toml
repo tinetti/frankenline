@@ -13,6 +13,7 @@ hocon = "0.7.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.59"
 serde_yaml = "0.8.21"
+strfmt = "0.1.6"
 toml = "0.5.8"
 
 [lib]

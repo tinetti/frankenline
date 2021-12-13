@@ -1,8 +1,11 @@
+use std::collections::HashMap;
 use std::io::Write;
 use std::process;
 use std::process::Stdio;
 
 use ansi_term::Color::Fixed;
+use strfmt::Format;
+use crate::config::defaults::Defaults;
 
 use crate::config::model::{Command, Config};
 use crate::error::{Error, Result};
@@ -10,6 +13,7 @@ use crate::selector::CommandSelector;
 
 pub struct FzfSelector {
     pub fzf_command: Option<Vec<String>>,
+    pub fzf_line_name_width: u8,
     pub fzf_preview_description_color: u8,
     pub fzf_preview_name_color: u8,
     pub fzf_preview_path_color: u8,
@@ -18,25 +22,44 @@ pub struct FzfSelector {
 
 impl FzfSelector {
     pub fn new(config: &Config) -> FzfSelector {
+        let name_width = &config.fzf_line_name_width;
+        let name_width = name_width.as_ref()
+            .map(|text| text.parse::<u8>())
+            .unwrap_or(Ok(Defaults::DEFAULT_FZF_LINE_NAME_WIDTH))
+            .unwrap_or_else(|err| {
+                eprintln!("error parsing fzf_line_name_width: {}", err);
+                Defaults::DEFAULT_FZF_LINE_NAME_WIDTH
+            });
+
         FzfSelector {
             fzf_command: None,
-            fzf_preview_description_color: config.fzf_preview_description_color.unwrap_or(1),
-            fzf_preview_name_color: config.fzf_preview_name_color.unwrap_or(2),
-            fzf_preview_path_color: config.fzf_preview_path_color.unwrap_or(3),
-            fzf_preview_template_color: config.fzf_preview_template_color.unwrap_or(4),
+            fzf_line_name_width: name_width,
+
+            fzf_preview_description_color: config.fzf_preview_description_color
+                .unwrap_or(Defaults::DEFAULT_FZF_PREVIEW_DESCRIPTION_COLOR),
+
+            fzf_preview_name_color: config.fzf_preview_name_color
+                .unwrap_or(Defaults::DEFAULT_FZF_PREVIEW_NAME_COLOR),
+
+            fzf_preview_path_color: config.fzf_preview_path_color
+                .unwrap_or(Defaults::DEFAULT_FZF_PREVIEW_PATH_COLOR),
+
+            fzf_preview_template_color: config.fzf_preview_template_color
+                .unwrap_or(Defaults::DEFAULT_FZF_PREVIEW_TEMPLATE_COLOR),
         }
     }
 
-    fn generate_fzf_line(index: usize, command: &Command) -> String {
-        format!(
-            "{index} {name:75} {template}\0",
-            index = index,
-            name = command.name,
-            template = command.template
-        )
+    fn generate_fzf_line(&self, index: usize, command: &Command) -> String {
+        let fmt = format!("{{index}} {{name:<{name_width}}} {{template}}\0", name_width = self.fzf_line_name_width);
+        let index = index.to_string();
+        let mut vars = HashMap::new();
+        vars.insert("index".to_string(), &index);
+        vars.insert("name".to_string(), &command.name);
+        vars.insert("template".to_string(), &command.template);
+        fmt.format(&vars).unwrap_or(fmt)
     }
 
-    pub fn generate_fzf_preview(self, config: &Config, command: &Command) -> String {
+    pub fn generate_fzf_preview(&self, config: &Config, command: &Command) -> String {
         let path = format!("{}", config.path.as_ref().unwrap().display());
         format!(
             "[{path}]\n{description}\n\n{name}\n{template}",
@@ -61,9 +84,10 @@ impl FzfSelector {
         Ok(index)
     }
 
-    fn generate_fzf_command(self, config: &Config) -> Vec<String> {
-        match self.fzf_command {
-            Some(c) => c,
+    fn generate_fzf_command(&self, config: &Config) -> Vec<String> {
+        let c = &self.fzf_command;
+        match c {
+            Some(c) => c.to_owned(),
             None => {
                 let default_layout = "default".to_string();
                 let layout = &config.fzf_layout.as_ref()
@@ -109,7 +133,7 @@ impl CommandSelector for FzfSelector {
 
         let child_stdin = child.stdin.as_mut().unwrap();
         for (i, (_config, command)) in commands.iter().enumerate() {
-            let fzf_line = Self::generate_fzf_line(i, command);
+            let fzf_line = self.generate_fzf_line(i, command);
             let fzf_line = fzf_line.as_bytes();
             child_stdin.write(fzf_line)
                 .map_err(|err| Error::new(format!("Error writing command to fzf: {}", err)))?;

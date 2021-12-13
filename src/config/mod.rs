@@ -1,6 +1,7 @@
 use std::path::Path;
 use crate::error::Result;
 
+pub mod defaults;
 pub mod model;
 mod loader;
 mod postman;
