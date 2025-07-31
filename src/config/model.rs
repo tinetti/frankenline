@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
-    pub description: String,
+    pub description: Option<String>,
     #[serde(alias = "command")]
     pub commands: Vec<Command>,
     #[serde(skip_serializing)]
@@ -32,7 +32,7 @@ pub struct Config {
 impl Config {
     pub fn new() -> Config {
         Config {
-            description: "".to_string(),
+            description: None,
             imports: None,
             path: None,
             children: None,

@@ -57,7 +57,7 @@ impl From<Postman> for Config {
         let config = Config::new();
         Config {
             commands,
-            description: format!("{} (Postman Collection)", postman.info.name),
+            description: Some(format!("{} (Postman Collection)", postman.info.name)),
             ..config
         }
     }

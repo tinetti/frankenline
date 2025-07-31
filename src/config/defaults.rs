@@ -22,11 +22,16 @@ impl Defaults {
 description: Welcome to Frankenline!  Here are some sample commands to get you started :)
 
 commands:
-- name: print this config file
+- name: print the current configuration
   template: frankenline --print-config yaml
 
-- name: copy this config file to your home directory
-  template: cp {path} ~/.config/frankenline.example.yml
+- name: create a new root config file
+  template: \"
+  echo 'commands:
+\n- name: edit frankenline config file
+\n\\ \\ template: eval ${{EDITOR:-vi}} ~/.config/frankenline.yml
+  ' > ~/.config/frankenline.yml
+  \"
 
 - name: edit frankenline config file
   template: eval ${{EDITOR:-vi}} {path}

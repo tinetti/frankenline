@@ -1,5 +1,5 @@
 __frankenline() {
-  setopt localoptions pipefail no_aliases 2> /dev/null
+  setopt localoptions pipefail no_aliases 2> /tmp/frankenline-errors
   eval "frankenline"
 #  echo -n "${(q)item}"
  local ret=$?
